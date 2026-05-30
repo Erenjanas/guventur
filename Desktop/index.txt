@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NORD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #050505;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+            cursor: none;
+        }
+
+        /* Custom cursor */
+        .custom-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #0064ff;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background 0.2s;
+            mix-blend-mode: difference;
+        }
+
+        .custom-cursor.hover {
+            width: 50px;
+            height: 50px;
+            background: rgba(0,100,255,0.2);
+        }
+
+        .cursor-dot {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: #0064ff;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10001;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px #0064ff, 0 0 20px #0064ff;
+        }
+
+        /* Mouse glow efekti */
+        .cursor-glow {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 999;
+            background: radial-gradient(circle, rgba(0,100,255,0.12) 0%, rgba(0,100,255,0.04) 30%, transparent 60%);
+            transform: translate(-50%, -50%);
+            transition: all 0.15s ease;
+            mix-blend-mode: screen;
+        }
+
+        /* Kar efekti */
+        .snow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            color: #fff;
+            font-size: 1em;
+            opacity: 0.8;
+            animation: fall linear infinite;
+            text-shadow: 0 0 8px rgba(255,255,255,0.8), 0 0 15px rgba(255,255,255,0.4);
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-10px) rotate(0deg) translateX(0);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 0.8; }
+            100% {
+                transform: translateY(100vh) rotate(720deg) translateX(50px);
+                opacity: 0;
+            }
+        }
+
+        /* Arka plan grid */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0,100,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,100,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Arka plan parçacıkları */
+        .bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(0,100,255,0.6);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0,100,255,0.8);
+            animation: floatParticle 20s infinite;
+        }
+
+        @keyframes floatParticle {
+            0%, 100% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% { opacity: 1; transform: translateY(90vh) scale(1); }
+            90% { opacity: 1; transform: translateY(10vh) scale(1); }
+            100% {
+                transform: translateY(-10vh) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Scanline efekti */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.03) 2px,
+                rgba(0,0,0,0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 998;
+        }
+
+        /* Ana container */
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* NORD yazısı - daha keskin ve göz alıcı */
+        .nord-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(5rem, 15vw, 12rem);
+            font-weight: 900;
+            letter-spacing: 25px;
+            color: #fff;
+            text-transform: uppercase;
+            position: relative;
+            margin-bottom: 50px;
+            animation: titleReveal 2s ease-out forwards;
+            opacity: 0;
+        }
+
+        .nord-title::before {
+            content: 'NORD';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            color: transparent;
+            -webkit-text-stroke: 3px rgba(0,100,255,0.5);
+            z-index: -1;
+            animation: glitch1 4s infinite;
+            clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+        }
+
+        .nord-title::after {
+            content: 'NORD';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            color: transparent;
+            -webkit-text-stroke: 3px rgba(0,200,255,0.3);
+            z-index: -2;
+            animation: glitch2 4s infinite 0.2s;
+            clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+        }
+
+        .nord-title .glow-text {
+            background: linear-gradient(180deg, #fff 0%, #a0c8ff 50%, #0064ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px rgba(0,100,255,0.8))
+                    drop-shadow(0 0 40px rgba(0,100,255,0.5))
+                    drop-shadow(0 0 80px rgba(0,100,255,0.3));
+            animation: textPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes titleReveal {
+            0% {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.8);
+                filter: blur(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes textPulse {
+            0%, 100% {
+                filter: drop-shadow(0 0 20px rgba(0,100,255,0.8))
+                        drop-shadow(0 0 40px rgba(0,100,255,0.5))
+                        drop-shadow(0 0 80px rgba(0,100,255,0.3));
+            }
+            50% {
+                filter: drop-shadow(0 0 30px rgba(0,100,255,1))
+                        drop-shadow(0 0 60px rgba(0,100,255,0.7))
+                        drop-shadow(0 0 100px rgba(0,100,255,0.5));
+            }
+        }
+
+        @keyframes glitch1 {
+            0%, 90%, 100% { transform: translate(0); opacity: 0; }
+            91% { transform: translate(-5px, 2px); opacity: 0.8; }
+            92% { transform: translate(5px, -2px); opacity: 0.8; }
+            93% { transform: translate(0); opacity: 0; }
+        }
+
+        @keyframes glitch2 {
+            0%, 85%, 100% { transform: translate(0); opacity: 0; }
+            86% { transform: translate(3px, -3px); opacity: 0.6; }
+            87% { transform: translate(-3px, 3px); opacity: 0.6; }
+            88% { transform: translate(0); opacity: 0; }
+        }
+
+        /* Profil fotoğrafı */
+        .profile-section {
+            position: relative;
+            margin-bottom: 50px;
+            animation: profileReveal 1.5s ease-out 0.5s forwards;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        @keyframes profileReveal {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .profile-img {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(0,100,255,0.6);
+            box-shadow: 
+                0 0 40px rgba(0,100,255,0.4),
+                0 0 80px rgba(0,100,255,0.2),
+                0 0 120px rgba(0,100,255,0.1),
+                inset 0 0 40px rgba(0,100,255,0.1);
+            animation: imgFloat 6s ease-in-out infinite;
+            transition: all 0.5s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .profile-img:hover {
+            transform: scale(1.08);
+            box-shadow: 
+                0 0 60px rgba(0,100,255,0.7),
+                0 0 120px rgba(0,100,255,0.4),
+                0 0 180px rgba(0,100,255,0.2);
+        }
+
+        @keyframes imgFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-12px) rotate(1deg); }
+            75% { transform: translateY(-8px) rotate(-1deg); }
+        }
+
+        .profile-ring {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            right: -15px;
+            bottom: -15px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: rgba(0,100,255,0.8);
+            border-right-color: rgba(0,100,255,0.3);
+            animation: spin 6s linear infinite;
+            z-index: 1;
+        }
+
+        .profile-ring:nth-child(2) {
+            top: -25px;
+            left: -25px;
+            right: -25px;
+            bottom: -25px;
+            border-top-color: rgba(0,200,255,0.4);
+            border-left-color: rgba(0,100,255,0.8);
+            animation: spin 10s linear infinite reverse;
+        }
+
+        .profile-ring:nth-child(3) {
+            top: -35px;
+            left: -35px;
+            right: -35px;
+            bottom: -35px;
+            border: 1px dashed rgba(0,100,255,0.3);
+            animation: spin 15s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mesaj kutusu */
+        .message-box {
+            max-width: 650px;
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 30px 40px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(0,100,255,0.25);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+            animation: messageReveal 1.5s ease-out 1s forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        @keyframes messageReveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,100,255,0.08), transparent);
+            animation: shimmer 5s infinite;
+        }
+
+        .message-box::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, transparent, rgba(0,100,255,0.3), transparent);
+            border-radius: 20px;
+            z-index: -1;
+            opacity: 0;
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .message-text {
+            font-size: 1.4rem;
+            line-height: 1.9;
+            color: #e0e0e0;
+            position: relative;
+            z-index: 1;
+            font-weight: 400;
+        }
+
+        .message-text span {
+            color: #4488ff;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(68,136,255,0.5);
+        }
+
+        /* Butonlar container */
+        .buttons-container {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 40px;
+            animation: buttonsReveal 1.5s ease-out 1.5s forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes buttonsReveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Telegram butonu */
+        .telegram-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 55px;
+            background: linear-gradient(135deg, #0088cc, #00a8e8, #0088cc);
+            background-size: 200% 200%;
+            color: #fff;
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            border-radius: 50px;
+            border: none;
+            cursor: none;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 30px rgba(0,136,204,0.4);
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .telegram-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .telegram-btn:hover::before {
+            left: 100%;
+        }
+
+        .telegram-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 50px rgba(0,136,204,0.6);
+        }
+
+        .telegram-btn:active {
+            transform: translateY(-2px) scale(0.98);
+        }
+
+        .telegram-icon {
+            width: 28px;
+            height: 28px;
+            fill: #fff;
+            animation: telegramBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes telegramBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-6px) rotate(-8deg); }
+            75% { transform: translateY(-3px) rotate(8deg); }
+        }
+
+        /* WhatsApp butonu */
+        .whatsapp-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 55px;
+            background: linear-gradient(135deg, #25d366, #128c7e, #25d366);
+            background-size: 200% 200%;
+            color: #fff;
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            border-radius: 50px;
+            border: none;
+            cursor: none;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 30px rgba(37,211,102,0.4);
+            animation: gradientShift 3s ease infinite;
+        }
+
+        .whatsapp-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .whatsapp-btn:hover::before {
+            left: 100%;
+        }
+
+        .whatsapp-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 50px rgba(37,211,102,0.6);
+        }
+
+        .whatsapp-btn:active {
+            transform: translateY(-2px) scale(0.98);
+        }
+
+        .whatsapp-icon {
+            width: 28px;
+            height: 28px;
+            fill: #fff;
+            animation: whatsappShake 3s ease-in-out infinite;
+        }
+
+        @keyframes whatsappShake {
+            0%, 100% { transform: rotate(0deg); }
+            10% { transform: rotate(-10deg); }
+            20% { transform: rotate(10deg); }
+            30% { transform: rotate(-10deg); }
+            40% { transform: rotate(10deg); }
+            50% { transform: rotate(0deg); }
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: #444;
+            letter-spacing: 3px;
+            animation: footerReveal 2s ease-out 2s forwards;
+            opacity: 0;
+        }
+
+        @keyframes footerReveal {
+            to { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .nord-title {
+                letter-spacing: 10px;
+            }
+            .profile-img {
+                width: 220px;
+                height: 220px;
+            }
+            .message-text {
+                font-size: 1.1rem;
+            }
+            .telegram-btn, .whatsapp-btn {
+                padding: 16px 40px;
+                font-size: 1rem;
+            }
+            .buttons-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <!-- Custom cursor -->
+    <div class="custom-cursor" id="customCursor"></div>
+    <div class="cursor-dot" id="cursorDot"></div>
+
+    <!-- Mouse glow efekti -->
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <!-- Kar efekti -->
+    <div class="snow-container" id="snowContainer"></div>
+
+    <!-- Arka plan grid -->
+    <div class="bg-grid"></div>
+
+    <!-- Arka plan parçacıkları -->
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <!-- Scanline efekti -->
+    <div class="scanlines"></div>
+
+    <!-- Ana içerik -->
+    <div class="main-container">
+        <!-- NORD başlık -->
+        <h1 class="nord-title"><span class="glow-text">NORD</span></h1>
+
+        <!-- Profil fotoğrafı -->
+        <div class="profile-section">
+            <div class="profile-ring"></div>
+            <div class="profile-ring"></div>
+            <div class="profile-ring"></div>
+            <img src="photo_2026-04-16_14-35-21.jpg" alt="NORD" class="profile-img" id="profileImg">
+        </div>
+
+        <!-- Mesaj kutusu -->
+        <div class="message-box">
+            <p class="message-text">
+                Selam ben <span>NORD</span>, sana daha hızlı yardımcı olabilmem için selam verdikten sonra konuya gir.
+            </p>
+        </div>
+
+        <!-- Butonlar -->
+        <div class="buttons-container">
+            <!-- Telegram butonu -->
+            <a href="https://t.me/GAYRlMESRU" target="_blank" class="telegram-btn" data-hover>
+                <svg class="telegram-icon" viewBox="0 0 24 24">
+                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                </svg>
+                TELEGRAM
+            </a>
+
+            <!-- WhatsApp butonu -->
+            <a href="https://wa.me/16395697826" target="_blank" class="whatsapp-btn" data-hover>
+                <svg class="whatsapp-icon" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                WHATSAPP
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">NORD © 2026</div>
+    </div>
+
+    <script>
+        // Custom cursor
+        const customCursor = document.getElementById('customCursor');
+        const cursorDot = document.getElementById('cursorDot');
+        const cursorGlow = document.getElementById('cursorGlow');
+
+        document.addEventListener('mousemove', (e) => {
+            customCursor.style.left = e.clientX + 'px';
+            customCursor.style.top = e.clientY + 'px';
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+            cursorGlow.style.left = e.clientX + 'px';
+            cursorGlow.style.top = e.clientY + 'px';
+        });
+
+        // Hover efekti cursor için
+        const hoverElements = document.querySelectorAll('[data-hover], a, button');
+        hoverElements.forEach(el => {
+            el.addEventListener('mouseenter', () => customCursor.classList.add('hover'));
+            el.addEventListener('mouseleave', () => customCursor.classList.remove('hover'));
+        });
+
+        // Kar efekti oluştur
+        const snowContainer = document.getElementById('snowContainer');
+        const snowflakeCount = 120;
+
+        for (let i = 0; i < snowflakeCount; i++) {
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            snowflake.innerHTML = ['❄', '❅', '❆', '•', '·'][Math.floor(Math.random() * 5)];
+            snowflake.style.left = Math.random() * 100 + '%';
+            snowflake.style.animationDuration = Math.random() * 6 + 4 + 's';
+            snowflake.style.animationDelay = Math.random() * 8 + 's';
+            snowflake.style.fontSize = Math.random() * 12 + 8 + 'px';
+            snowflake.style.opacity = Math.random() * 0.7 + 0.3;
+            snowContainer.appendChild(snowflake);
+        }
+
+        // Arka plan parçacıkları
+        const bgParticles = document.getElementById('bgParticles');
+        for (let i = 0; i < 60; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDuration = Math.random() * 25 + 15 + 's';
+            particle.style.animationDelay = Math.random() * 15 + 's';
+            particle.style.width = Math.random() * 3 + 1 + 'px';
+            particle.style.height = particle.style.width;
+            bgParticles.appendChild(particle);
+        }
+
+        // Profil fotoğrafı parallax efekti
+        const profileImg = document.getElementById('profileImg');
+        document.addEventListener('mousemove', (e) => {
+            const x = (window.innerWidth / 2 - e.clientX) / 25;
+            const y = (window.innerHeight / 2 - e.clientY) / 25;
+            profileImg.style.transform = `translate(${x}px, ${y}px)`;
+        });
+
+        // Tıklama efekti
+        document.addEventListener('click', (e) => {
+            const ripple = document.createElement('div');
+            ripple.style.position = 'fixed';
+            ripple.style.left = e.clientX + 'px';
+            ripple.style.top = e.clientY + 'px';
+            ripple.style.width = '0px';
+            ripple.style.height = '0px';
+            ripple.style.borderRadius = '50%';
+            ripple.style.background = 'rgba(0,100,255,0.3)';
+            ripple.style.transform = 'translate(-50%, -50%)';
+            ripple.style.pointerEvents = 'none';
+            ripple.style.zIndex = '9999';
+            ripple.style.animation = 'rippleEffect 0.6s ease-out forwards';
+            document.body.appendChild(ripple);
+
+            setTimeout(() => ripple.remove(), 600);
+        });
+
+        // Ripple animasyonu ekle
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes rippleEffect {
+                to {
+                    width: 300px;
+                    height: 300px;
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
